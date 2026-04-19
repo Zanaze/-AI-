@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 智能分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4" style="background-color: #eef7ff;">
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h3 class="text-success mb-1">AI 智能分析报告</h3>
+                    <div class="text-muted">{{ student.name }} / {{ student.sno }}</div>
+                </div>
+                {% if overall_ok %}
+                    <span class="badge bg-success fs-6">信息无误</span>
+                {% else %}
+                    <span class="badge bg-danger fs-6">发现异常</span>
+                {% endif %}
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">基础信息校验</div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>字段</th>
+                                <th>结果</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in validation_results %}
+                                <tr>
+                                    <td>{{ item.field }}</td>
+                                    <td>
+                                        {% if item.ok %}
+                                            <span class="badge bg-success">正确</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">有误</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.message }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">学生类型分类</div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        分类结果：
+                        <span class="badge bg-info text-dark">{{ score_summary.student_type }}</span>
+                    </p>
+                    <p class="mb-2">分类依据：{{ score_summary.type_reason }}</p>
+                    <ul class="mb-0">
+                        {% for advice in score_summary.type_advice %}
+                            <li>{{ advice }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">成绩概览</div>
+                        <div class="card-body">
+                            {% if score_summary.has_scores %}
+                                <p>已录入科目数：{{ score_summary.count }}</p>
+                                <p>平均分：{{ score_summary.average }}</p>
+                                <p>成绩等级：<span class="badge bg-primary">{{ score_summary.average_level }}</span></p>
+                                <p>{{ score_summary.performance_tag }}</p>
+                                <p>最高分：{{ score_summary.highest.subject }} {{ score_summary.highest.score }}</p>
+                                <p>最低分：{{ score_summary.lowest.subject }} {{ score_summary.lowest.score }}</p>
+                                <p>最高分与最低分差值：{{ score_summary.score_gap }}</p>
+                                {% if score_summary.excellent_subjects %}
+                                    <p class="text-success mb-1">优势科目：{{ score_summary.excellent_subjects|join:'、' }}</p>
+                                {% endif %}
+                                {% if score_summary.weak_subjects %}
+                                    <p class="text-warning mb-0">需重点关注：{{ score_summary.weak_subjects|join:'、' }}</p>
+                                {% endif %}
+                            {% else %}
+                                <p class="text-muted mb-0">暂无成绩数据，无法进行成绩分析。</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">趋势判断</div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                {% for insight in score_summary.trend_insights %}
+                                    <li>{{ insight }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">学业预警</div>
+                        <div class="card-body">
+                            {% if score_summary.fail_subjects %}
+                                <p class="text-danger">待提升科目：{{ score_summary.fail_subjects|join:'、' }}</p>
+                            {% else %}
+                                <p class="text-success">当前已录入科目中没有不及格成绩。</p>
+                            {% endif %}
+
+                            {% if score_summary.invalid_scores %}
+                                <p class="text-danger">异常成绩：{{ score_summary.invalid_scores|join:'、' }}</p>
+                            {% endif %}
+
+                            <ul class="mb-0">
+                                {% for warning in score_summary.warnings %}
+                                    <li>{{ warning }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">AI 提示与建议</div>
+                        <div class="card-body">
+                            {% if not student.phone %}
+                                <p class="text-warning">建议补充联系方式，便于通知。</p>
+                            {% endif %}
+                            <ul class="mb-0">
+                                {% for suggestion in score_summary.suggestions %}
+                                    <li>{{ suggestion }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'student_center' %}" class="btn btn-primary mt-3">返回个人中心</a>
+        </div>
+    </div>
+</body>
+</html>

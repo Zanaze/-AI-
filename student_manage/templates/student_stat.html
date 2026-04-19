@@ -1,0 +1,158 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计-学生信息管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        .chart-box {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body style="background-color: #eef7ff;">
+    {% include 'inc/header.html' %}
+    <div class="container mt-4">
+        <div class="card mb-4">
+            <div class="card-header">学生数据总览</div>
+            <div class="card-body">
+                <h4 class="text-center text-primary">学生总人数：{{ total }} 人</h4>
+            </div>
+        </div>
+
+        <!-- 可视化图表 -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">按院系统计人数</div>
+                    <div class="card-body p-0">
+                        <div id="deptChart" class="chart-box"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">按性别统计人数</div>
+                    <div class="card-body p-0">
+                        <div id="genderChart" class="chart-box"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详细统计表格 -->
+        <div class="card mt-4">
+            <div class="card-header">统计详情</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>统计类型</th>
+                            <th>分类</th>
+                            <th>人数</th>
+                            <th>占比</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in dept_stat %}
+                        <tr>
+                            <td>院系</td>
+                            <td>{{ item.dept }}</td>
+                            <td>{{ item.count }}</td>
+                            <td>
+                                {% if total > 0 %}
+                                {{ item.count|div:total|mul:100|floatformat:2 }}%
+                                {% else %}
+                                0%
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for item in gender_stat %}
+                        <tr>
+                            <td>性别</td>
+                            <td>{{ item.gender }}</td>
+                            <td>{{ item.count }}</td>
+                            <td>
+                                {% if total > 0 %}
+                                {{ item.count|div:total|mul:100|floatformat:2 }}%
+                                {% else %}
+                                0%
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                // ✅ 终极方案：直接内联模板变量，彻底绕开HTML转义问题
+                const deptList = JSON.parse('{{ dept_list|safe }}');
+                const deptCount = JSON.parse('{{ dept_count|safe }}');
+                const genderList = JSON.parse('{{ gender_list|safe }}');
+                const genderCount = JSON.parse('{{ gender_count|safe }}');
+
+                // 调试日志：F12控制台可查看
+                console.log('后端返回的dept_list:', '{{ dept_list|safe }}');
+                console.log('解析后deptList:', deptList);
+                console.log('后端返回的gender_list:', '{{ gender_list|safe }}');
+                console.log('解析后genderList:', genderList);
+
+                // 初始化院系柱状图
+                const deptChart = echarts.init(document.getElementById('deptChart'));
+                deptChart.setOption({
+                    title: { text: '院系人数分布', left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'category', data: deptList },
+                    yAxis: { type: 'value' },
+                    series: [{ name: '人数', type: 'bar', data: deptCount, color: '#4285F4' }]
+                });
+
+                // 初始化性别饼图
+                const genderChart = echarts.init(document.getElementById('genderChart'));
+                const genderData = genderList.map((name, i) => ({ name, value: genderCount[i] }));
+
+                genderChart.setOption({
+                    title: { text: '性别人数分布', left: 'center' },
+                    tooltip: { trigger: 'item', formatter: '{b}: {c}人 ({d}%)' },
+                    series: [{
+                        name: '人数',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '50%'],
+                        data: genderData,
+                        label: { show: true }
+                    }]
+                });
+
+                // 窗口自适应
+                window.addEventListener('resize', () => {
+                    deptChart.resize();
+                    genderChart.resize();
+                });
+
+            } catch (e) {
+                console.error('图表加载失败，错误详情:', e);
+                console.error('错误堆栈:', e.stack);
+                const msg = '<div style="text-align:center;line-height:400px;color:#999;">暂无学生数据</div>';
+                document.getElementById('deptChart').innerHTML = msg;
+                document.getElementById('genderChart').innerHTML = msg;
+            }
+        });
+    </script>
+</body>
+
+</html>

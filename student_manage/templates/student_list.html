@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body style="background-color: #eef7ff;">
+    {% include 'inc/header.html' %}
+    <div class="container">
+        <div class="card mb-4">
+            <div class="card-header">学生信息查询</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'student_query' %}">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" name="sno" placeholder="学号" value="{{ query_data.sno|default:'' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" name="name" placeholder="姓名" value="{{ query_data.name|default:'' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="dept" placeholder="所属院系" value="{{ query_data.dept|default:'' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="major" placeholder="专业" value="{{ query_data.major|default:'' }}">
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="submit" class="btn btn-primary">查询</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>学生信息列表</span>
+                <a href="{% url 'student_add' %}" class="btn btn-success btn-sm">添加学生</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>学号</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>院系</th>
+                            <th>专业</th>
+                            <th>年级</th>
+                            <th>班级</th>
+                            <th>联系方式</th>
+                            <th>成绩数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr>
+                                <td>{{ student.sno }}</td>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.gender }}</td>
+                                <td>{{ student.dept }}</td>
+                                <td>{{ student.major }}</td>
+                                <td>{{ student.grade }}</td>
+                                <td>{{ student.clazz }}</td>
+                                <td>{{ student.phone|default:'-' }}</td>
+                                <td>{{ student.scores.count }}</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a href="{% url 'student_edit' student.sno %}" class="btn btn-primary btn-sm">编辑</a>
+                                        <a href="{% url 'student_score_manage' student.sno %}" class="btn btn-info btn-sm text-white">成绩管理</a>
+                                        <form method="post" action="{% url 'student_reset_password' student.sno %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('确认将该学生密码重置为学号吗？');">重置密码</button>
+                                        </form>
+                                        <a href="{% url 'student_delete' student.sno %}" class="btn btn-danger btn-sm" onclick="return confirm('确认删除该学生及其账号和成绩吗？');">删除</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-3">暂无学生信息</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
